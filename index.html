@@ -1,0 +1,2342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Viewer - Log Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            background: #1a1a1a;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #b0b0b0;
+            font-size: 14px;
+        }
+
+        .file-upload-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(102, 126, 234, 0.1);
+            color: #c4b5fd;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-file-select {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-file-select:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-info {
+            color: #888;
+            font-size: 14px;
+        }
+
+        /* File Badge */
+        .file-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border: 1px solid rgba(102, 126, 234, 0.4);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .file-badge:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+            border-color: rgba(102, 126, 234, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .file-badge-name {
+            color: #c4b5fd;
+        }
+
+        .file-badge-remove {
+            background: rgba(239, 68, 68, 0.2);
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .file-badge-remove:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: scale(1.1);
+        }
+
+        .warning-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+
+        /* Time Range Row */
+        .time-range-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        /* Filters Grid */
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        /* Log Type Display */
+        .log-type-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .log-type-display:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .log-type-value {
+            flex: 1;
+            color: #c4b5fd;
+        }
+
+        .log-type-value.empty {
+            color: #666;
+        }
+
+        .log-type-icon {
+            color: #667eea;
+            font-size: 12px;
+        }
+
+        /* Custom DateTime Picker */
+        .datetime-picker-wrapper {
+            position: relative;
+        }
+
+        .datetime-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .datetime-display:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .datetime-value {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            color: #c4b5fd;
+        }
+
+        .datetime-value.empty {
+            color: #666;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .datetime-button {
+            padding: 4px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .datetime-button:hover {
+            transform: scale(1.05);
+        }
+
+        .datetime-picker-wrapper input[type="datetime-local"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+            height: 0;
+        }
+
+        input[type="text"],
+        input[type="datetime-local"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0a0a0a;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-buttons-left {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons-right {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Statistics Panel */
+        .statistics-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .stat-value.opc {
+            color: #3b82f6;
+        }
+
+        .stat-value.general {
+            color: #10b981;
+        }
+
+        .stat-value.plc {
+            color: #f97316;
+        }
+
+        .stat-value.loadunload {
+            color: #06b6d4;
+        }
+
+        .stat-value.tags {
+            color: #f59e0b;
+        }
+
+        .stat-value.timespan {
+            color: #8b5cf6;
+        }
+
+        /* Table Container */
+        .table-container {
+            background: #1a1a1a;
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #0a0a0a;
+        }
+
+        th {
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            color: #b0b0b0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #2a2a2a;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #1a1a1a;
+            font-size: 14px;
+            color: #d0d0d0;
+        }
+
+        tbody tr {
+            background: #141414;
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #1a1a1a;
+        }
+
+        tbody tr:hover {
+            background: #222;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-trace {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .badge-info {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .badge-opc {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .badge-general {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .badge-command {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .badge-plc {
+            background: rgba(249, 115, 22, 0.2);
+            color: #f97316;
+        }
+
+        .badge-loadunload {
+            background: rgba(6, 182, 212, 0.2);
+            color: #06b6d4;
+        }
+
+        .tag-container {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .tag-item {
+            background: #0a0a0a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px 0;
+            display: inline-block;
+        }
+
+        .tag-name {
+            color: #888;
+        }
+
+        .tag-value {
+            color: #c4b5fd;
+            font-weight: 600;
+        }
+
+        .tag-value.enabled {
+            color: #10b981;
+        }
+
+        .tag-value.disabled {
+            color: #ef4444;
+        }
+
+        .tag-value.collapsed {
+            color: #6b7280;
+        }
+
+        .raw-message {
+            max-width: 400px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #888;
+        }
+
+        .raw-message:hover {
+            white-space: normal;
+            overflow: visible;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #888;
+        }
+
+        .empty-state p {
+            color: #666;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .pagination-info {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .page-input {
+            width: 80px;
+            text-align: center;
+        }
+
+        /* Loading Indicator */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .spinner {
+            border: 3px solid #2a2a2a;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Sortable Headers */
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 25px;
+        }
+
+        .sortable:hover {
+            color: #667eea;
+        }
+
+        .sortable::after {
+            content: '⇅';
+            position: absolute;
+            right: 8px;
+            opacity: 0.3;
+            font-size: 12px;
+        }
+
+        .sortable.asc::after {
+            content: '↑';
+            opacity: 1;
+            color: #c4b5fd;
+        }
+
+        .sortable.desc::after {
+            content: '↓';
+            opacity: 1;
+            color: #c4b5fd;
+        }
+
+        /* Clickable Stat Card */
+        .stat-card.clickable {
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card.clickable:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        /* Modal Container */
+        .modal-container {
+            background: #1a1a1a;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+        }
+
+        /* Modal Header */
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        /* Modal Body */
+        .modal-body {
+            padding: 20px 25px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Tag Selector Section */
+        .tag-selector-section {
+            margin-bottom: 20px;
+        }
+
+        /* Selected Tags Section */
+        .selected-tags-section {
+            margin-bottom: 20px;
+        }
+
+        .selected-tags-container {
+            min-height: 50px;
+            padding: 12px;
+            background: #0a0a0a;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .selected-tags-empty {
+            color: #666;
+            font-size: 13px;
+            font-style: italic;
+            width: 100%;
+            text-align: center;
+            padding: 8px 0;
+        }
+
+        /* Tag Badge */
+        .tag-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .tag-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .tag-badge-remove {
+            background: none;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s ease;
+        }
+
+        .tag-badge-remove:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Modal Actions */
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding-top: 15px;
+            border-top: 1px solid #2a2a2a;
+            flex-wrap: wrap;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .time-range-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .time-range-row > span {
+                display: none;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .statistics-panel {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            th, td {
+                padding: 10px 8px;
+                font-size: 12px;
+            }
+
+            .modal-container {
+                width: 95%;
+                max-height: 90vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Log Analyzer</h1>
+            <p>log viewer for OPC, General, PLC, and LoadUnload logs</p>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+            <!-- File Upload -->
+            <div class="control-group">
+                <label>Log Files</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="fileInput" accept=".log" multiple>
+                    <button class="btn btn-file-select" onclick="document.getElementById('fileInput').click()">
+                        📁 Select Log File(s)
+                    </button>
+                    <div id="selectedFilesContainer" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+                <div class="warning-message" id="warningMessage">
+                    ⚠️ Large file detected (>10,000 logs). Results are paginated for better performance.
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="control-group">
+                <label>Filters</label>
+                <div class="time-range-row">
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; font-weight: normal; color: #b0b0b0; margin-bottom: 8px; display: block;">Start Time</label>
+                        <div class="datetime-picker-wrapper">
+                            <div class="datetime-display" onclick="openDateTimePicker('filterStartTime')">
+                                <span class="datetime-value empty" id="filterStartTimeDisplay">Select start time</span>
+                                <button class="datetime-button" type="button">📅</button>
+                            </div>
+                            <input type="datetime-local" id="filterStartTime" step="1" onchange="updateDateTimeDisplay('filterStartTime')">
+                        </div>
+                    </div>
+                    <span style="padding-top: 28px; color: #666; font-size: 18px;">—</span>
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; font-weight: normal; color: #b0b0b0; margin-bottom: 8px; display: block;">End Time</label>
+                        <div class="datetime-picker-wrapper">
+                            <div class="datetime-display" onclick="openDateTimePicker('filterEndTime')">
+                                <span class="datetime-value empty" id="filterEndTimeDisplay">Select end time</span>
+                                <button class="datetime-button" type="button">📅</button>
+                            </div>
+                            <input type="datetime-local" id="filterEndTime" step="1" onchange="updateDateTimeDisplay('filterEndTime')">
+                        </div>
+                    </div>
+                </div>
+                <div class="filters-grid">
+                    <div>
+                        <label style="font-size: 12px; font-weight: normal;">Log Level</label>
+                        <select id="filterLevel">
+                            <option value="">All</option>
+                            <option value="TRACE">TRACE</option>
+                            <option value="INFO">INFO</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; font-weight: normal;">Log Type</label>
+                        <div class="log-type-display" onclick="showLogTypeModal()" title="Click to select log types">
+                            <span class="log-type-value empty" id="logTypeDisplay">All Log Types</span>
+                            <span class="log-type-icon">▼</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; font-weight: normal;">Tag Name</label>
+                        <div class="log-type-display" onclick="showTagNameModal()" title="Click to select tag names">
+                            <span class="log-type-value empty" id="tagNameDisplay">All Tags</span>
+                            <span class="log-type-icon">▼</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; font-weight: normal;">Value</label>
+                        <input type="text" id="filterValue" placeholder="Search value...">
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <div class="action-buttons-left">
+                        <button class="btn btn-success" onclick="applyFilters()">Apply Filters</button>
+                        <button class="btn btn-danger" onclick="clearFilters()">Clear Filters</button>
+                    </div>
+                    <div class="action-buttons-right">
+                        <button class="btn btn-primary" onclick="exportToCSV()">📥 Export Results</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Panel -->
+        <div class="statistics-panel" id="statsPanel" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-label">Total Logs</div>
+                <div class="stat-value" id="statTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Time Span</div>
+                <div class="stat-value timespan" id="statTimespan">0h 0m</div>
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="table-container">
+            <div id="loadingIndicator" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading and parsing log files...</p>
+            </div>
+
+            <div id="emptyState" class="empty-state">
+                <div class="empty-state-icon">📄</div>
+                <h3>No Logs Loaded</h3>
+                <p>Please select one or more .log files to begin analysis</p>
+            </div>
+
+            <div class="table-wrapper" id="tableWrapper" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th class="sortable asc" data-sort="date" onclick="sortByColumn('date')">Date</th>
+                            <th class="sortable" data-sort="time" onclick="sortByColumn('time')">Time</th>
+                            <th>Level</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Tag Information</th>
+                            <th>Raw Message</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="paginationControls" style="display: none;">
+            <div class="pagination-info">
+                <span id="paginationInfo">Showing 0 of 0 logs</span>
+            </div>
+            <div class="pagination-controls">
+                <label style="color: #888; font-size: 14px; margin-right: 5px;">Rows per page:</label>
+                <select id="itemsPerPage" onchange="changePageSize()" style="margin-right: 15px;">
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100" selected>100</option>
+                </select>
+                <button class="btn btn-secondary" onclick="previousPage()" id="prevBtn">Previous</button>
+                <input type="number" id="currentPage" class="page-input" value="1" min="1" onchange="goToPage()">
+                <span style="color: #666;">of <span id="totalPages">1</span></span>
+                <button class="btn btn-secondary" onclick="nextPage()" id="nextBtn">Next</button>
+            </div>
+        </div>
+
+        <!-- Log Type Modal -->
+        <div class="modal-overlay" id="logTypeModal" onclick="closeLogTypeModal()">
+            <div class="modal-container" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h2>Select Log Types</h2>
+                    <button class="modal-close" onclick="closeLogTypeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="tag-selector-section">
+                        <label style="font-size: 14px; font-weight: 600; color: #b0b0b0; margin-bottom: 8px; display: block;">Available Log Types</label>
+                        <select id="logTypeDropdown" onchange="addLogTypeFromDropdown()" style="width: 100%; padding: 10px 15px; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 8px; color: #e0e0e0; font-size: 14px;">
+                            <option value="">-- Choose a log type to add --</option>
+                        </select>
+                    </div>
+
+                    <div class="selected-tags-section">
+                        <label style="font-size: 14px; font-weight: 600; color: #b0b0b0; margin-bottom: 8px; display: block;">Selected Log Types</label>
+                        <div class="selected-tags-container" id="selectedLogTypesContainer">
+                            <div class="selected-tags-empty">No log types selected (showing all)</div>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button class="btn btn-success" onclick="applyLogTypeFilters()">Apply Filters</button>
+                        <button class="btn btn-secondary" onclick="clearAllLogTypeFilters()">Clear All</button>
+                        <button class="btn btn-secondary" onclick="closeLogTypeModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tag Name Modal -->
+        <div class="modal-overlay" id="tagNameModal" onclick="closeTagNameModal()">
+            <div class="modal-container" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h2>Select Tag Names</h2>
+                    <button class="modal-close" onclick="closeTagNameModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="tag-selector-section">
+                        <label style="font-size: 14px; font-weight: 600; color: #b0b0b0; margin-bottom: 8px; display: block;">Available Tags</label>
+                        <select id="tagNameDropdown" onchange="addTagNameFromDropdown()" style="width: 100%; padding: 10px 15px; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 8px; color: #e0e0e0; font-size: 14px;">
+                            <option value="">-- Choose a tag to add --</option>
+                        </select>
+                    </div>
+
+                    <div class="selected-tags-section">
+                        <label style="font-size: 14px; font-weight: 600; color: #b0b0b0; margin-bottom: 8px; display: block;">Selected Tags</label>
+                        <div class="selected-tags-container" id="selectedTagNamesContainer">
+                            <div class="selected-tags-empty">No tags selected (showing all)</div>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button class="btn btn-success" onclick="applyTagNameFilters()">Apply Filters</button>
+                        <button class="btn btn-secondary" onclick="clearAllTagNameFilters()">Clear All</button>
+                        <button class="btn btn-secondary" onclick="closeTagNameModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let allLogs = [];
+        let filteredLogs = [];
+        let currentPage = 1;
+        let currentSortColumn = 'date';
+        let currentSortOrder = 'asc';
+        let selectedFiles = []; // Store selected files
+        let selectedLogTypes = []; // Store selected log types for filtering
+        let availableLogTypes = []; // Store available log types from loaded files
+
+        // File input handler
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+        // Handle file upload
+        async function handleFileUpload(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
+
+            // Add new files to selectedFiles array (avoid duplicates)
+            for (let file of files) {
+                const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
+                if (!exists) {
+                    selectedFiles.push(file);
+                }
+            }
+
+            // Render file badges
+            renderFileBadges();
+
+            // Process all selected files
+            await processAllFiles();
+
+            // Reset file input
+            event.target.value = '';
+        }
+
+        // Render file badges
+        function renderFileBadges() {
+            const container = document.getElementById('selectedFilesContainer');
+            container.innerHTML = '';
+
+            selectedFiles.forEach((file, index) => {
+                const badge = document.createElement('div');
+                badge.className = 'file-badge';
+                badge.innerHTML = `
+                    <span class="file-badge-name">📄 ${escapeHtml(file.name)}</span>
+                    <button class="file-badge-remove" onclick="removeFile(${index})" title="Remove file">×</button>
+                `;
+                container.appendChild(badge);
+            });
+        }
+
+        // Remove file by index
+        async function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileBadges();
+
+            // Clear current filter selections to avoid stale data
+            selectedLogTypes = [];
+            updateLogTypeDisplay();
+            selectedTags = [];
+            updateTagNameDisplay();
+            document.getElementById('filterLevel').value = '';
+            document.getElementById('filterValue').value = '';
+
+            if (selectedFiles.length === 0) {
+                // Reset to empty state
+                allLogs = [];
+                filteredLogs = [];
+                document.getElementById('tableWrapper').style.display = 'none';
+                document.getElementById('statsPanel').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('warningMessage').style.display = 'none';
+
+                // Reset time filters
+                autoPopulateDateFilters();
+            } else {
+                // Re-process remaining files (will automatically update dropdowns)
+                await processAllFiles();
+            }
+        }
+
+        // Process all selected files
+        async function processAllFiles() {
+            if (selectedFiles.length === 0) return;
+
+            // Show loading
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('tableWrapper').style.display = 'none';
+
+            try {
+                // Parse all files
+                allLogs = [];
+                for (let file of selectedFiles) {
+                    const content = await file.text();
+                    const logs = parseLogFile(content, file.name);
+                    allLogs = allLogs.concat(logs);
+                }
+
+                // Sort by timestamp (default)
+                allLogs.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+
+                // Auto-populate date filters
+                autoPopulateDateFilters();
+
+                // Show all logs by default
+                filteredLogs = [...allLogs];
+
+                // Show warning if large file
+                if (allLogs.length > 10000) {
+                    document.getElementById('warningMessage').style.display = 'block';
+                } else {
+                    document.getElementById('warningMessage').style.display = 'none';
+                }
+
+                // Update statistics
+                updateStatistics();
+
+                // Populate log type dropdown
+                populateLogTypeSelect();
+
+                // Render table
+                renderTable();
+
+                // Show stats panel
+                document.getElementById('statsPanel').style.display = 'grid';
+
+            } catch (error) {
+                console.error('Error parsing files:', error);
+                alert('Error parsing log files. Please check the file format.');
+            } finally {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        }
+
+        // Parse log file
+        function parseLogFile(content, fileName) {
+            const lines = content.split('\n');
+            const logs = [];
+
+            const basePattern = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}\.\d+)\|(.*?)\|(.*?)\|(.*)$/;
+
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+
+                const match = line.match(basePattern);
+                if (!match) continue;
+
+                const [, date, time, level, type, message] = match;
+                const timestamp = `${date} ${time}`;
+
+                const log = {
+                    date,
+                    time,
+                    timestamp,
+                    level: level.trim(),
+                    type: type.trim(),
+                    rawMessage: message.trim(),
+                    logType: '',
+                    tags: [],
+                    fileName
+                };
+
+                // Parse based on type
+                if (log.type === 'OPC') {
+                    parseOPCLog(log);
+                } else if (log.type === 'General') {
+                    parseGeneralLog(log);
+                } else if (log.type === 'PLC') {
+                    parsePLCLog(log);
+                } else if (log.type === 'LoadUnload') {
+                    parseLoadUnloadLog(log);
+                }
+
+                logs.push(log);
+            }
+
+            return logs;
+        }
+
+        // Parse OPC logs
+        function parseOPCLog(log) {
+            const msg = log.rawMessage;
+
+            // Read Address pattern (HMI receives from PLC)
+            const readPattern = /Read Address: (.*?), Value: (.*)$/;
+            const readMatch = msg.match(readPattern);
+            if (readMatch) {
+                log.logType = 'OPC_READ';
+                log.tags.push({
+                    name: 'OPC Receive: ' + readMatch[1].trim(),
+                    value: readMatch[2].trim()
+                });
+                return;
+            }
+
+            // Write Address pattern (HMI sends to PLC)
+            const writePattern = /Write Address: (.*?), Value: (.*)$/;
+            const writeMatch = msg.match(writePattern);
+            if (writeMatch) {
+                log.logType = 'OPC_WRITE';
+                log.tags.push({
+                    name: 'OPC Send: ' + writeMatch[1].trim(),
+                    value: writeMatch[2].trim()
+                });
+                return;
+            }
+
+            // Notification pattern (HMI receives from PLC)
+            const notificationPattern = /Notification \[.*?\]: \d+ = \[(.*?)\]\(\) and Value = (.*)\.?$/;
+            const notificationMatch = msg.match(notificationPattern);
+            if (notificationMatch) {
+                log.logType = 'OPC_NOTIFICATION';
+                log.tags.push({
+                    name: 'OPC Receive: ' + notificationMatch[1].trim(),
+                    value: notificationMatch[2].trim()
+                });
+                return;
+            }
+
+            log.logType = 'OPC_OTHER';
+        }
+
+        // Parse General logs
+        function parseGeneralLog(log) {
+            const msg = log.rawMessage;
+
+            // Button Status pattern
+            if (msg.includes('Button:') || msg.includes('Button :')) {
+                log.logType = 'GENERAL_BUTTON';
+                const parts = msg.split('|');
+                for (let part of parts) {
+                    part = part.trim();
+                    const buttonMatch = part.match(/(.*?)\s*Button\s*:\s*(.*)$/i);
+                    if (buttonMatch) {
+                        log.tags.push({
+                            name: buttonMatch[1].trim() + ' Button',
+                            value: buttonMatch[2].trim()
+                        });
+                    }
+                }
+                return;
+            }
+
+            // Status Definition pattern
+            if (msg.includes('StatusDefinition')) {
+                const statusMatch = msg.match(/(.*?)\s*:\s*(.*)$/);
+                if (statusMatch) {
+                    log.logType = 'GENERAL_STATUS';
+                    log.tags.push({
+                        name: statusMatch[1].trim(),
+                        value: statusMatch[2].trim()
+                    });
+                    return;
+                }
+            }
+
+            // Command pattern - R, prefix means Receive
+            if (msg.startsWith('R,')) {
+                log.logType = 'GENERAL_COMMAND';
+                log.tags.push({
+                    name: 'Command Receive',
+                    value: msg
+                });
+                return;
+            }
+
+            // Command pattern - ACK, prefix means Send/Acknowledge
+            if (msg.startsWith('ACK,')) {
+                log.logType = 'GENERAL_COMMAND';
+                log.tags.push({
+                    name: 'Command Receive ACK',
+                    value: msg
+                });
+                return;
+            }
+
+            // RCMD pattern - Receive command
+            if (msg.startsWith('RCMD=')) {
+                log.logType = 'GENERAL_COMMAND';
+                log.tags.push({
+                    name: 'RCMD Receive',
+                    value: msg
+                });
+                return;
+            }
+
+            // Simple Message pattern
+            const simpleMatch = msg.match(/(.*?)\s*-\s*(.*)$/);
+            if (simpleMatch) {
+                log.logType = 'GENERAL_MESSAGE';
+                log.tags.push({
+                    name: simpleMatch[1].trim(),
+                    value: simpleMatch[2].trim()
+                });
+                return;
+            }
+
+            // Fallback
+            log.logType = 'GENERAL_OTHER';
+        }
+
+        // Parse PLC logs
+        function parsePLCLog(log) {
+            const msg = log.rawMessage;
+
+            // Cabinet operations pattern
+            if (msg.includes('Cabinet') || msg.includes('drawer') || msg.includes('Slider')) {
+                log.logType = 'CABINET_OPERATION';
+
+                // Parse Cabinet N Open Door
+                const cabinetDoorMatch = msg.match(/Cabinet\s+(\d+)\s+Open Door/i);
+                if (cabinetDoorMatch) {
+                    log.tags.push({
+                        name: `Cabinet ${cabinetDoorMatch[1]}`,
+                        value: 'Door opened'
+                    });
+                    return;
+                }
+
+                // Parse Cabinet N Close Door
+                const cabinetCloseMatch = msg.match(/Cabinet\s+(\d+)\s+Close Door/i);
+                if (cabinetCloseMatch) {
+                    log.tags.push({
+                        name: `Cabinet ${cabinetCloseMatch[1]}`,
+                        value: 'Door closed'
+                    });
+                    return;
+                }
+
+                // Parse Open drawer
+                if (msg.toLowerCase().includes('open drawer')) {
+                    log.tags.push({
+                        name: 'Drawer',
+                        value: 'Opened'
+                    });
+                    return;
+                }
+
+                // Parse Close drawer
+                if (msg.toLowerCase().includes('close drawer')) {
+                    log.tags.push({
+                        name: 'Drawer',
+                        value: 'Closed'
+                    });
+                    return;
+                }
+
+                // Parse Slider in Pos
+                if (msg.includes('Slider in Pos')) {
+                    log.tags.push({
+                        name: 'Slider',
+                        value: 'In position'
+                    });
+                    return;
+                }
+
+                // Parse Slider out of Pos
+                if (msg.includes('Slider out')) {
+                    log.tags.push({
+                        name: 'Slider',
+                        value: 'Out of position'
+                    });
+                    return;
+                }
+
+                // Generic cabinet operation
+                log.tags.push({
+                    name: 'Cabinet Operation',
+                    value: msg
+                });
+                return;
+            }
+
+            // Robot operations pattern
+            if (msg.includes('Robot')) {
+                log.logType = 'ROBOT_OPERATION';
+
+                // Parse Robot pick from cabinet
+                if (msg.toLowerCase().includes('pick from cabinet')) {
+                    log.tags.push({
+                        name: 'Robot',
+                        value: 'Pick from cabinet'
+                    });
+                    return;
+                }
+
+                // Parse Robot place to output
+                if (msg.toLowerCase().includes('place to output')) {
+                    log.tags.push({
+                        name: 'Robot',
+                        value: 'Place to output'
+                    });
+                    return;
+                }
+
+                // Parse Robot pick from input
+                if (msg.toLowerCase().includes('pick from input')) {
+                    log.tags.push({
+                        name: 'Robot',
+                        value: 'Pick from input'
+                    });
+                    return;
+                }
+
+                // Parse Robot place to cabinet
+                if (msg.toLowerCase().includes('place to cabinet')) {
+                    log.tags.push({
+                        name: 'Robot',
+                        value: 'Place to cabinet'
+                    });
+                    return;
+                }
+
+                // Generic robot operation
+                log.tags.push({
+                    name: 'Robot Operation',
+                    value: msg
+                });
+                return;
+            }
+
+            // PLC-HMI Communication pattern
+            if (msg.includes('PLC_SEND_TO_HMI')) {
+                log.logType = 'PLC_COMMUNICATION';
+                // Extract the message content after PLC_SEND_TO_HMI
+                const messageContent = msg.replace(/PLC_SEND_TO_HMI[_:]?\s*/i, '').trim();
+                log.tags.push({
+                    name: 'PLC → HMI',
+                    value: messageContent || msg
+                });
+                return;
+            }
+
+            if (msg.includes('HMI_SEND_TO_PLC')) {
+                log.logType = 'PLC_COMMUNICATION';
+                // Extract the message content after HMI_SEND_TO_PLC
+                const messageContent = msg.replace(/HMI_SEND_TO_PLC[_:]?\s*/i, '').trim();
+                log.tags.push({
+                    name: 'HMI → PLC',
+                    value: messageContent || msg
+                });
+                return;
+            }
+
+            // PLC Send commands (e.g., "Send Job Done")
+            if (msg.match(/^Send\s+/i)) {
+                log.logType = 'PLC_COMMUNICATION';
+                const commandContent = msg.replace(/^Send\s+/i, '').trim();
+                log.tags.push({
+                    name: 'PLC Send',
+                    value: commandContent
+                });
+                return;
+            }
+
+            // PLC Receive commands
+            if (msg.match(/^Receive\s+/i) || msg.toLowerCase().includes('received')) {
+                log.logType = 'PLC_COMMUNICATION';
+                const commandContent = msg.replace(/^Receive\s+/i, '').trim();
+                log.tags.push({
+                    name: 'PLC Receive',
+                    value: commandContent || msg
+                });
+                return;
+            }
+
+            // Scanning operations
+            if (msg.includes('Scan') || msg.includes('Barcode')) {
+                log.logType = 'PLC_SCAN';
+                log.tags.push({
+                    name: 'Scan Operation',
+                    value: msg
+                });
+                return;
+            }
+
+            // Fallback
+            log.logType = 'PLC_OTHER';
+            log.tags.push({
+                name: 'PLC',
+                value: msg
+            });
+        }
+
+        // Parse LoadUnload logs
+        function parseLoadUnloadLog(log) {
+            const msg = log.rawMessage;
+
+            // Extract operation prefix (LOAD/UNLOAD)
+            const operationMatch = msg.match(/^(LOAD|UNLOAD)\s*-\s*(.*)$/);
+            if (operationMatch) {
+                const operation = operationMatch[1];
+                const details = operationMatch[2];
+
+                // Check for Transfer Command with TRID
+                if (details.includes('Transfer Command') || details.includes('TRID')) {
+                    log.logType = 'LOADUNLOAD_TRANSFER';
+                    const tridMatch = details.match(/\[TRID(\d+)\]/);
+                    log.tags.push({
+                        name: operation + ' Transfer',
+                        value: tridMatch ? `TRID${tridMatch[1]}` : details
+                    });
+                    return;
+                }
+
+                // Check for Location data
+                if (details.includes('Location') || details.includes('STK-')) {
+                    log.logType = 'LOADUNLOAD_LOCATION';
+                    const locationMatch = details.match(/\[(.*?)\]/);
+                    log.tags.push({
+                        name: operation + ' Location',
+                        value: locationMatch ? locationMatch[1] : details
+                    });
+                    return;
+                }
+
+                // Check for Barcode Scanned
+                if (details.includes('Barcode Scanned')) {
+                    log.logType = 'LOADUNLOAD_BARCODE';
+                    const tridMatch = details.match(/\[TRID(\d+)\]/);
+                    log.tags.push({
+                        name: operation + ' Barcode',
+                        value: tridMatch ? `TRID${tridMatch[1]}` : details
+                    });
+                    return;
+                }
+
+                // Check for Job states
+                if (details.includes('Job')) {
+                    log.logType = 'LOADUNLOAD_JOB';
+                    log.tags.push({
+                        name: operation + ' Job',
+                        value: details
+                    });
+                    return;
+                }
+
+                // Default operation
+                log.logType = 'LOADUNLOAD_OPERATION';
+                log.tags.push({
+                    name: operation,
+                    value: details
+                });
+                return;
+            }
+
+            // Fallback - no LOAD/UNLOAD prefix
+            log.logType = 'LOADUNLOAD_OTHER';
+            log.tags.push({
+                name: 'LoadUnload',
+                value: msg
+            });
+        }
+
+        // Auto-populate date filters
+        function autoPopulateDateFilters() {
+            if (allLogs.length === 0) return;
+
+            const startTime = allLogs[0].timestamp;
+            const endTime = allLogs[allLogs.length - 1].timestamp;
+
+            // Convert to datetime-local format
+            const startDatetimeLocal = timestampToDatetimeLocal(startTime);
+            const endDatetimeLocal = timestampToDatetimeLocal(endTime);
+
+            const startInput = document.getElementById('filterStartTime');
+            const endInput = document.getElementById('filterEndTime');
+
+            // Set values to the full range
+            startInput.value = startDatetimeLocal;
+            endInput.value = endDatetimeLocal;
+
+            // Restrict selectable range to only times that have log messages
+            startInput.min = startDatetimeLocal;
+            startInput.max = endDatetimeLocal;
+            endInput.min = startDatetimeLocal;
+            endInput.max = endDatetimeLocal;
+
+            // Update custom displays
+            updateDateTimeDisplay('filterStartTime');
+            updateDateTimeDisplay('filterEndTime');
+        }
+
+        // Convert timestamp to datetime-local format
+        function timestampToDatetimeLocal(timestamp) {
+            // Format: YYYY-MM-DD HH:MM:SS.mmmm -> YYYY-MM-DDTHH:MM:SS
+            const parts = timestamp.split(' ');
+            if (parts.length !== 2) return '';
+            const date = parts[0];
+            const time = parts[1].split('.')[0]; // Remove milliseconds
+            return `${date}T${time}`;
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const logs = filteredLogs;
+
+            // Total logs count (combines all types: OPC, General, PLC, LoadUnload)
+            document.getElementById('statTotal').textContent = logs.length.toLocaleString();
+
+            // Time span calculation
+            if (logs.length > 0) {
+                const start = new Date(logs[0].timestamp.replace(' ', 'T'));
+                const end = new Date(logs[logs.length - 1].timestamp.replace(' ', 'T'));
+                const diffMs = end - start;
+                const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                document.getElementById('statTimespan').textContent = `${hours}h ${minutes}m`;
+            } else {
+                document.getElementById('statTimespan').textContent = '0h 0m';
+            }
+        }
+
+        // Populate log type select dropdown based on available logs
+        function populateLogTypeSelect() {
+            const logTypeSet = new Set();
+
+            // Collect all unique log types from loaded logs
+            allLogs.forEach(log => {
+                if (log.logType) {
+                    logTypeSet.add(log.logType);
+                }
+            });
+
+            const sortedLogTypes = Array.from(logTypeSet).sort((a, b) => a.localeCompare(b));
+
+            // Store available log types globally
+            availableLogTypes = sortedLogTypes;
+
+            // Map of log type codes to display names
+            const logTypeDisplayNames = {
+                'OPC_READ': 'OPC Read',
+                'OPC_WRITE': 'OPC Write',
+                'OPC_NOTIFICATION': 'OPC Notification',
+                'GENERAL_STATUS': 'Status Info',
+                'GENERAL_BUTTON': 'Button Status',
+                'GENERAL_COMMAND': 'OPC Command',
+                'GENERAL_MESSAGE': 'General Message',
+                'CABINET_OPERATION': 'Cabinet Operation',
+                'ROBOT_OPERATION': 'Robot Operation',
+                'PLC_COMMUNICATION': 'PLC Communication',
+                'PLC_SCAN': 'PLC Scan',
+                'LOADUNLOAD_TRANSFER': 'LoadUnload Transfer',
+                'LOADUNLOAD_LOCATION': 'LoadUnload Location',
+                'LOADUNLOAD_BARCODE': 'LoadUnload Barcode',
+                'LOADUNLOAD_JOB': 'LoadUnload Job',
+                'LOADUNLOAD_OPERATION': 'LoadUnload Operation'
+            };
+
+            // Populate modal dropdown
+            const modalDropdown = document.getElementById('logTypeDropdown');
+            modalDropdown.innerHTML = '<option value="">-- Choose a log type to add --</option>';
+
+            sortedLogTypes.forEach(logType => {
+                const option = document.createElement('option');
+                option.value = logType;
+                option.textContent = logTypeDisplayNames[logType] || formatLogType(logType);
+                modalDropdown.appendChild(option);
+            });
+
+            // Update display
+            updateLogTypeDisplay();
+        }
+
+        // Get display name for log type
+        function getLogTypeDisplayName(logType) {
+            const logTypeDisplayNames = {
+                'OPC_READ': 'OPC Read',
+                'OPC_WRITE': 'OPC Write',
+                'OPC_NOTIFICATION': 'OPC Notification',
+                'GENERAL_STATUS': 'Status Info',
+                'GENERAL_BUTTON': 'Button Status',
+                'GENERAL_COMMAND': 'OPC Command',
+                'GENERAL_MESSAGE': 'General Message',
+                'CABINET_OPERATION': 'Cabinet Operation',
+                'ROBOT_OPERATION': 'Robot Operation',
+                'PLC_COMMUNICATION': 'PLC Communication',
+                'PLC_SCAN': 'PLC Scan',
+                'LOADUNLOAD_TRANSFER': 'LoadUnload Transfer',
+                'LOADUNLOAD_LOCATION': 'LoadUnload Location',
+                'LOADUNLOAD_BARCODE': 'LoadUnload Barcode',
+                'LOADUNLOAD_JOB': 'LoadUnload Job',
+                'LOADUNLOAD_OPERATION': 'LoadUnload Operation'
+            };
+            return logTypeDisplayNames[logType] || formatLogType(logType);
+        }
+
+
+        // Apply filters
+        function applyFilters() {
+            filteredLogs = allLogs.filter(log => {
+                // Log Type filter - using selectedLogTypes array (OR logic)
+                if (selectedLogTypes.length > 0) {
+                    if (!selectedLogTypes.includes(log.logType)) return false;
+                }
+
+                // Level filter
+                const levelFilter = document.getElementById('filterLevel').value;
+                if (levelFilter && log.level !== levelFilter) return false;
+
+                // Tag Name filter - from selected tags modal (OR logic: match ANY selected tag)
+                if (selectedTags.length > 0) {
+                    const hasSelectedTag = log.tags.some(tag =>
+                        selectedTags.includes(tag.name)
+                    );
+                    if (!hasSelectedTag) return false;
+                }
+
+                // Value filter
+                const valueFilter = document.getElementById('filterValue').value.toLowerCase();
+                if (valueFilter) {
+                    const hasMatchingValue = log.tags.some(tag =>
+                        tag.value.toLowerCase().includes(valueFilter)
+                    );
+                    if (!hasMatchingValue) return false;
+                }
+
+                // Time Range filter
+                const startTime = document.getElementById('filterStartTime').value;
+                const endTime = document.getElementById('filterEndTime').value;
+
+                if (startTime) {
+                    const startDateTime = startTime.replace('T', ' ');
+                    if (log.timestamp < startDateTime) return false;
+                }
+
+                if (endTime) {
+                    const endDateTime = endTime.replace('T', ' ');
+                    if (log.timestamp > endDateTime) return false;
+                }
+
+                return true;
+            });
+
+            updateStatistics();
+            currentPage = 1;
+            renderTable();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('filterLevel').value = '';
+            document.getElementById('filterValue').value = '';
+            autoPopulateDateFilters();
+
+            // Clear selected log types
+            selectedLogTypes = [];
+            updateLogTypeDisplay();
+
+            // Clear selected tags
+            selectedTags = [];
+            updateTagNameDisplay();
+
+            filteredLogs = [...allLogs];
+            updateStatistics();
+            currentPage = 1;
+            renderTable();
+        }
+
+        // Sort by column (Date or Time)
+        function sortByColumn(column) {
+            // Determine sort field based on column
+            let sortField = 'timestamp'; // Default to full timestamp for both date and time
+
+            // Toggle sort order if clicking same column, otherwise default to ascending
+            if (currentSortColumn === column) {
+                currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = column;
+                currentSortOrder = 'asc';
+            }
+
+            // Sort the filtered logs
+            filteredLogs.sort((a, b) => {
+                // Always sort by full timestamp for proper chronological ordering
+                const compareA = a.timestamp;
+                const compareB = b.timestamp;
+
+                if (currentSortOrder === 'asc') {
+                    return compareA > compareB ? 1 : -1;
+                } else {
+                    return compareA < compareB ? 1 : -1;
+                }
+            });
+
+            // Update UI indicators
+            document.querySelectorAll('.sortable').forEach(th => {
+                th.classList.remove('asc', 'desc');
+            });
+
+            const clickedHeader = document.querySelector(`[data-sort="${column}"]`);
+            if (clickedHeader) {
+                clickedHeader.classList.add(currentSortOrder);
+            }
+
+            // Render table with sorted data
+            renderTable();
+        }
+
+        // Render table
+        function renderTable() {
+            if (filteredLogs.length === 0) {
+                document.getElementById('tableWrapper').style.display = 'none';
+                document.getElementById('paginationControls').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('emptyState').innerHTML = `
+                    <div class="empty-state-icon">🔍</div>
+                    <h3>No Matching Logs Found</h3>
+                    <p>Try adjusting your filters or loading different files</p>
+                `;
+                return;
+            }
+
+            document.getElementById('tableWrapper').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+
+            // Always use pagination mode
+            const itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+            const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+
+            // Ensure current page is valid
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredLogs.length);
+
+            const logsToShow = filteredLogs.slice(startIndex, endIndex);
+            renderLogs(logsToShow, startIndex);
+
+            // Update pagination controls
+            document.getElementById('paginationControls').style.display = 'flex';
+            document.getElementById('paginationInfo').textContent =
+                `Showing ${startIndex + 1}-${endIndex} of ${filteredLogs.length} logs`;
+            document.getElementById('currentPage').value = currentPage;
+            document.getElementById('currentPage').max = totalPages;
+            document.getElementById('totalPages').textContent = totalPages;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+        }
+
+        // Render logs to table
+        function renderLogs(logs, startIndex) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            logs.forEach((log, index) => {
+                const row = document.createElement('tr');
+
+                const tagsHTML = log.tags.map(tag => {
+                    const valueClass = getValueClass(tag.value);
+                    return `
+                        <div class="tag-item">
+                            <span class="tag-name">${escapeHtml(tag.name)}:</span>
+                            <span class="tag-value ${valueClass}">${escapeHtml(tag.value)}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                row.innerHTML = `
+                    <td>${startIndex + index + 1}</td>
+                    <td>${log.date}</td>
+                    <td>${log.time}</td>
+                    <td><span class="badge badge-${log.level.toLowerCase()}">${log.level}</span></td>
+                    <td><span class="badge badge-${log.type.toLowerCase()}">${log.type}</span></td>
+                    <td><span class="badge ${log.logType.includes('COMMAND') ? 'badge-command' : ''}">${formatLogType(log.logType)}</span></td>
+                    <td><div class="tag-container">${tagsHTML}</div></td>
+                    <td><div class="raw-message" title="${escapeHtml(log.rawMessage)}">${escapeHtml(log.rawMessage)}</div></td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Get value class for styling
+        function getValueClass(value) {
+            const lowerValue = value.toLowerCase();
+            if (lowerValue === 'enabled') return 'enabled';
+            if (lowerValue === 'disabled') return 'disabled';
+            if (lowerValue === 'collapsed') return 'collapsed';
+            return '';
+        }
+
+        // Format log type for display
+        function formatLogType(logType) {
+            return logType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Change page size
+        function changePageSize() {
+            currentPage = 1; // Reset to first page when changing page size
+            renderTable();
+        }
+
+        // Pagination functions
+        function nextPage() {
+            const itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+            const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        }
+
+        function goToPage() {
+            const itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
+            const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+            const page = parseInt(document.getElementById('currentPage').value);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderTable();
+            } else {
+                document.getElementById('currentPage').value = currentPage;
+            }
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            if (filteredLogs.length === 0) {
+                alert('No logs to export');
+                return;
+            }
+
+            const headers = ['Date', 'Time', 'Level', 'Type', 'Log Type', 'Tag Name', 'Value', 'Raw Message'];
+            const rows = [];
+
+            filteredLogs.forEach(log => {
+                if (log.tags.length === 0) {
+                    rows.push([
+                        log.date,
+                        log.time,
+                        log.level,
+                        log.type,
+                        log.logType,
+                        '',
+                        '',
+                        log.rawMessage
+                    ]);
+                } else {
+                    log.tags.forEach(tag => {
+                        rows.push([
+                            log.date,
+                            log.time,
+                            log.level,
+                            log.type,
+                            log.logType,
+                            tag.name,
+                            tag.value,
+                            log.rawMessage
+                        ]);
+                    });
+                }
+            });
+
+            // Create CSV content
+            let csvContent = '\uFEFF'; // UTF-8 BOM for Excel
+            csvContent += headers.map(h => `"${h}"`).join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',') + '\n';
+            });
+
+            // Download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            link.href = URL.createObjectURL(blob);
+            link.download = `log_analysis_${timestamp}.csv`;
+            link.click();
+        }
+
+        // Log Type Modal Functions
+        function showLogTypeModal() {
+            // Populate modal dropdown with available log types
+            populateLogTypeSelect();
+
+            // Show currently selected log types
+            renderSelectedLogTypes();
+
+            // Show modal
+            document.getElementById('logTypeModal').classList.add('active');
+        }
+
+        function closeLogTypeModal() {
+            document.getElementById('logTypeModal').classList.remove('active');
+        }
+
+        function addLogTypeFromDropdown() {
+            const dropdown = document.getElementById('logTypeDropdown');
+            const logType = dropdown.value;
+
+            if (!logType) return;
+
+            // Check if log type is already selected
+            if (selectedLogTypes.includes(logType)) {
+                alert('This log type is already selected');
+                dropdown.value = '';
+                return;
+            }
+
+            // Add to selected log types
+            selectedLogTypes.push(logType);
+
+            // Update display
+            renderSelectedLogTypes();
+
+            // Reset dropdown
+            dropdown.value = '';
+        }
+
+        function renderSelectedLogTypes() {
+            const container = document.getElementById('selectedLogTypesContainer');
+
+            if (selectedLogTypes.length === 0) {
+                container.innerHTML = '<div class="selected-tags-empty">No log types selected (showing all)</div>';
+                return;
+            }
+
+            container.innerHTML = selectedLogTypes.map(logType =>
+                `<div class="tag-badge">
+                    <span>${escapeHtml(getLogTypeDisplayName(logType))}</span>
+                    <button class="tag-badge-remove" onclick="removeLogTypeBadge('${escapeHtml(logType).replace(/'/g, "\\'")}')">×</button>
+                </div>`
+            ).join('');
+        }
+
+        function removeLogTypeBadge(logType) {
+            selectedLogTypes = selectedLogTypes.filter(type => type !== logType);
+            renderSelectedLogTypes();
+        }
+
+        function clearAllLogTypeFilters() {
+            selectedLogTypes = [];
+            renderSelectedLogTypes();
+        }
+
+        function applyLogTypeFilters() {
+            // Close modal
+            closeLogTypeModal();
+
+            // Update display
+            updateLogTypeDisplay();
+
+            // Apply filters
+            applyFilters();
+        }
+
+        function updateLogTypeDisplay() {
+            const displayElement = document.getElementById('logTypeDisplay');
+
+            if (selectedLogTypes.length === 0) {
+                displayElement.textContent = 'All Log Types';
+                displayElement.classList.add('empty');
+            } else {
+                const displayText = selectedLogTypes.map(type => getLogTypeDisplayName(type)).join(', ');
+                displayElement.textContent = displayText;
+                displayElement.classList.remove('empty');
+            }
+        }
+
+        // Tag Name Modal Functions
+        let selectedTags = [];
+
+        function showTagNameModal() {
+            // Populate modal dropdown with available tags based on current filters
+            const levelFilter = document.getElementById('filterLevel').value;
+
+            // Filter logs based on log type and level
+            let logsForTags = allLogs;
+
+            if (selectedLogTypes.length > 0 || levelFilter) {
+                logsForTags = allLogs.filter(log => {
+                    if (selectedLogTypes.length > 0 && !selectedLogTypes.includes(log.logType)) return false;
+                    if (levelFilter && log.level !== levelFilter) return false;
+                    return true;
+                });
+            }
+
+            // Collect unique tags
+            const tagSet = new Set();
+            logsForTags.forEach(log => {
+                log.tags.forEach(tag => tagSet.add(tag.name));
+            });
+
+            const sortedTags = Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+
+            // Populate modal dropdown
+            const modalDropdown = document.getElementById('tagNameDropdown');
+            modalDropdown.innerHTML = '<option value="">-- Choose a tag to add --</option>';
+
+            sortedTags.forEach(tagName => {
+                const option = document.createElement('option');
+                option.value = tagName;
+                option.textContent = tagName;
+                modalDropdown.appendChild(option);
+            });
+
+            // Show currently selected tags
+            renderSelectedTagNames();
+
+            // Show modal
+            document.getElementById('tagNameModal').classList.add('active');
+        }
+
+        function closeTagNameModal() {
+            document.getElementById('tagNameModal').classList.remove('active');
+        }
+
+        function addTagNameFromDropdown() {
+            const dropdown = document.getElementById('tagNameDropdown');
+            const tagName = dropdown.value;
+
+            if (!tagName) return;
+
+            // Check if tag is already selected
+            if (selectedTags.includes(tagName)) {
+                alert('This tag is already selected');
+                dropdown.value = '';
+                return;
+            }
+
+            // Add to selected tags
+            selectedTags.push(tagName);
+
+            // Update display
+            renderSelectedTagNames();
+
+            // Reset dropdown
+            dropdown.value = '';
+        }
+
+        function renderSelectedTagNames() {
+            const container = document.getElementById('selectedTagNamesContainer');
+
+            if (selectedTags.length === 0) {
+                container.innerHTML = '<div class="selected-tags-empty">No tags selected (showing all)</div>';
+                return;
+            }
+
+            container.innerHTML = selectedTags.map(tagName =>
+                `<div class="tag-badge">
+                    <span>${escapeHtml(tagName)}</span>
+                    <button class="tag-badge-remove" onclick="removeTagNameBadge('${escapeHtml(tagName).replace(/'/g, "\\'")}')">×</button>
+                </div>`
+            ).join('');
+        }
+
+        function removeTagNameBadge(tagName) {
+            selectedTags = selectedTags.filter(tag => tag !== tagName);
+            renderSelectedTagNames();
+        }
+
+        function clearAllTagNameFilters() {
+            selectedTags = [];
+            renderSelectedTagNames();
+        }
+
+        function applyTagNameFilters() {
+            // Close modal
+            closeTagNameModal();
+
+            // Update display
+            updateTagNameDisplay();
+
+            // Apply filters
+            applyFilters();
+        }
+
+        function updateTagNameDisplay() {
+            const displayElement = document.getElementById('tagNameDisplay');
+
+            if (selectedTags.length === 0) {
+                displayElement.textContent = 'All Tags';
+                displayElement.classList.add('empty');
+            } else {
+                const displayText = selectedTags.join(', ');
+                displayElement.textContent = displayText;
+                displayElement.classList.remove('empty');
+            }
+        }
+
+        // Custom DateTime Picker Functions
+        function openDateTimePicker(inputId) {
+            const input = document.getElementById(inputId);
+            input.showPicker();
+        }
+
+        function updateDateTimeDisplay(inputId) {
+            const input = document.getElementById(inputId);
+            const displayElement = document.getElementById(inputId + 'Display');
+
+            if (input.value) {
+                displayElement.textContent = formatDateTimeForDisplay(input.value);
+                displayElement.classList.remove('empty');
+            } else {
+                displayElement.textContent = inputId === 'filterStartTime' ? 'Select start time' : 'Select end time';
+                displayElement.classList.add('empty');
+            }
+        }
+
+        function formatDateTimeForDisplay(datetimeLocal) {
+            // Input format: YYYY-MM-DDTHH:MM:SS
+            // Output format: DD/MM/YYYY, HH.MM.SSam/pm
+
+            if (!datetimeLocal) return '';
+
+            const date = new Date(datetimeLocal);
+
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+
+            let hours = date.getHours();
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+
+            const ampm = hours >= 12 ? 'pm' : 'am';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // Convert 0 to 12
+            const hoursStr = String(hours).padStart(2, '0');
+
+            return `${day}/${month}/${year}, ${hoursStr}.${minutes}.${seconds}${ampm}`;
+        }
+    </script>
+</body>
+</html>
