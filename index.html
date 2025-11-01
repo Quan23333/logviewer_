@@ -1357,7 +1357,7 @@
             if (msg.startsWith('R,')) {
                 log.logType = 'GENERAL_COMMAND';
                 log.tags.push({
-                    name: 'Command Receive',
+                    name: 'Command',
                     value: msg
                 });
                 return;
@@ -1367,7 +1367,7 @@
             if (msg.startsWith('ACK,')) {
                 log.logType = 'GENERAL_COMMAND';
                 log.tags.push({
-                    name: 'Command Receive ACK',
+                    name: 'Command',
                     value: msg
                 });
                 return;
